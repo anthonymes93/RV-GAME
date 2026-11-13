@@ -4,6 +4,64 @@ const scene=new THREE.Scene();scene.background=new THREE.Color(0xa9cce5);scene.f
 const camera=new THREE.PerspectiveCamera(68,innerWidth/innerHeight,.1,4500);const renderer=new THREE.WebGLRenderer({antialias:true});renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.35;document.body.prepend(renderer.domElement);
 scene.add(new THREE.HemisphereLight(0xd6efff,0x637348,2.4));const sun=new THREE.DirectionalLight(0xffedc4,3);sun.position.set(-140,260,100);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);sun.shadow.camera.left=-220;sun.shadow.camera.right=220;sun.shadow.camera.top=220;sun.shadow.camera.bottom=-220;scene.add(sun);
 const mat=(c,r=1,m=0)=>new THREE.MeshStandardMaterial({color:c,roughness:r,metalness:m});const grass=mat(0x60834b),asphalt=mat(0x44494b),white=mat(0xece9d8),yellow=mat(0xf3d77a),treeBark=mat(0x65513b),pine=mat(0x28583c),pine2=mat(0x397148),glass=mat(0x243f4d,.16,.2),rvWhite=mat(0xf0eee3,.6,.1),rvBlue=mat(0x28556a),rubber=mat(0x1b1d1c),silver=mat(0xb7bec1,.35,.65);
+
+// Lightweight, seamless procedural surface maps (offline-friendly).
+// These replace flat colors without adding megabytes of texture downloads.
+function surfaceTexture(kind,repeatX=1,repeatY=1){
+  const size=512,canvas=document.createElement('canvas');canvas.width=canvas.height=size;
+  const ctx=canvas.getContext('2d'),im=ctx.createImageData(size,size),data=im.data;
+  const palettes={
+    grass:[87,118,59],road:[66,68,69],rock:[110,113,106],
+    bark:[94,66,44],needles:[45,91,53],paint:[219,221,213],
+    rubber:[35,36,36],metal:[144,152,155]
+  };
+  const base=palettes[kind]||palettes.rock;
+  const hash=(x,y)=>{let n=Math.imul(x,374761393)+Math.imul(y,668265263)+8191;n=Math.imul(n^(n>>>13),1274126177);return ((n^(n>>>16))>>>0)/4294967295};
+  const smooth=(x,y,period)=>{
+    const gx=Math.floor(x/period),gy=Math.floor(y/period),fx=x/period-gx,fy=y/period-gy;
+    const u=fx*fx*(3-2*fx),v=fy*fy*(3-2*fy);
+    const h=(a,b)=>hash((a+4096)%4096,(b+4096)%4096);
+    return (h(gx,gy)*(1-u)+h(gx+1,gy)*u)*(1-v)+(h(gx,gy+1)*(1-u)+h(gx+1,gy+1)*u)*v;
+  };
+  for(let y=0;y<size;y++)for(let x=0;x<size;x++){
+    const p=(y*size+x)*4;
+    const grain=(smooth(x,y,48)-.5)*40+(smooth(x,y,12)-.5)*25+(hash(x,y)-.5)*24;
+    let n=grain;
+    if(kind==='grass'){n+=((hash(x*7,y*3)>.92)?23:0);n+=(smooth(x,y,96)-.5)*30}
+    if(kind==='road'){n=grain*.75;if(hash(x,y)>.987)n+=45}
+    if(kind==='rock'){n=grain*1.55+Math.abs(smooth(x,y,32)-.5)*45}
+    if(kind==='bark'){n=grain*.65+Math.sin(x*.32+smooth(x,y,45)*8)*21}
+    if(kind==='needles'){n=grain*1.1+Math.sin((x+y)*.55)*10}
+    if(kind==='paint'){n=grain*.14}
+    if(kind==='rubber'){n=grain*.32}
+    if(kind==='metal'){n=grain*.25+Math.sin(y*.13)*4}
+    for(let k=0;k<3;k++)data[p+k]=Math.max(0,Math.min(255,base[k]+n));
+    data[p+3]=255;
+  }
+  ctx.putImageData(im,0,0);
+  const tex=new THREE.CanvasTexture(canvas);
+  tex.wrapS=tex.wrapT=THREE.RepeatWrapping;
+  tex.repeat.set(repeatX,repeatY);
+  tex.colorSpace=THREE.SRGBColorSpace;
+  tex.anisotropy=Math.min(renderer.capabilities.getMaxAnisotropy(),8);
+  return tex;
+}
+function textured(material,kind,rx=1,ry=1,roughness=.9,metalness=0){
+  material.color.set(0xffffff);
+  material.map=surfaceTexture(kind,rx,ry);
+  material.roughness=roughness;
+  material.metalness=metalness;
+  material.needsUpdate=true;
+}
+textured(grass,'grass',180,180);
+textured(asphalt,'road',2,180);
+textured(treeBark,'bark',1,3);
+textured(pine,'needles',2,3);
+textured(pine2,'needles',2,3);
+textured(rvWhite,'paint',2,4,.38,.13);
+textured(rvBlue,'paint',2,4,.38,.15);
+textured(rubber,'rubber',2,2,1);
+textured(silver,'metal',2,2,.28,.75);
 function cube(w,h,d,material,x,y,z,parent=scene){const o=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),material);o.position.set(x,y,z);o.castShadow=true;o.receiveShadow=true;parent.add(o);return o}
 function cyl(rt,rb,h,material,x,y,z,parent=scene,n=8){const o=new THREE.Mesh(new THREE.CylinderGeometry(rt,rb,h,n),material);o.position.set(x,y,z);o.castShadow=true;parent.add(o);return o}
 // One game unit equals one metre. Road follows the negative Z direction.
@@ -14,7 +72,7 @@ let seed=4382;function rand(){seed=(seed*1664525+1013904223)>>>0;return seed/429
 const trees=[];const trunkGeo=new THREE.CylinderGeometry(.45,.62,5,7),coneGeo=new THREE.ConeGeometry(3.4,10,8);function addTree(x,z,s){const t=new THREE.Group();t.position.set(x,0,z);t.scale.setScalar(s);const trunk=new THREE.Mesh(trunkGeo,treeBark);trunk.position.y=2.5;t.add(trunk);for(let j=0;j<3;j++){const c=new THREE.Mesh(coneGeo,j%2?pine2:pine);c.position.y=6+j*2.7;c.scale.set(1-j*.17,.8,1-j*.17);t.add(c)}scene.add(t);trees.push({group:t,x,z,scale:s,hits:0,stage:"standing",fall:0,dir:1,pile:null})}
 for(let z=65;z>-1700;z-=15){for(const side of [-1,1]){if(rand()>.1)addTree(side*(24+rand()*90),z+(rand()-.5)*20,.65+rand()*1.3);if(rand()>.5)addTree(side*(110+rand()*90),z+(rand()-.5)*30,.9+rand()*1.3)}}
 // Distant hills.
-const hills=[];const hillMat=mat(0x68816c);for(let i=0;i<32;i++){const x=(rand()-.5)*2100,z=-200-rand()*2100;const radius=100+rand()*130,height=140+rand()*160;const hill=new THREE.Mesh(new THREE.ConeGeometry(radius,height,7),hillMat);hill.position.set(x,40,z);scene.add(hill);hills.push({x,z,radius,height})}
+const hills=[];const hillMat=mat(0x68816c);textured(hillMat,'rock',5,4);for(let i=0;i<32;i++){const x=(rand()-.5)*2100,z=-200-rand()*2100;const radius=100+rand()*130,height=140+rand()*160;const hill=new THREE.Mesh(new THREE.ConeGeometry(radius,height,7),hillMat);hill.position.set(x,40,z);scene.add(hill);hills.push({x,z,radius,height})}
 // Roadside cabin and destination campsite.
 const cabins=[{x:35,z:-350},{x:-42,z:-960},{x:35,z:-1590}];function cabin(x,z){cube(12,5,10,mat(0x916e50),x,2.5,z);const roof=new THREE.Mesh(new THREE.ConeGeometry(9,4,4),mat(0x493b35));roof.rotation.y=Math.PI/4;roof.scale.z=.9;roof.position.set(x,7,z);scene.add(roof);cube(2,2,.15,glass,x-3,3,z+5.1);cube(2,3,.15,mat(0x4e3428),x+2,1.5,z+5.12)}cabin(35,-350);cabin(-42,-960);cabin(35,-1590);
 const goalZ=-1609.344;const goal=new THREE.Group();goal.position.set(0,0,goalZ);scene.add(goal);cube(20,.15,9,mat(0x8d8068),0,.1,goalZ);for(const x of [-9,9])cube(.5,8,.5,treeBark,x,4,goalZ);cube(19,2.8,.4,mat(0x476e4a),0,7.5,goalZ);const signCanvas=document.createElement('canvas');signCanvas.width=1024;signCanvas.height=170;const ctx=signCanvas.getContext('2d');ctx.fillStyle='#e9f2d5';ctx.font='bold 73px system-ui';ctx.textAlign='center';ctx.fillText('PINE LAKE CAMPGROUND',512,112);const sign=new THREE.Mesh(new THREE.PlaneGeometry(17,2.8),new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(signCanvas),transparent:true,side:THREE.DoubleSide}));sign.position.set(0,7.5,goalZ+.27);scene.add(sign);
