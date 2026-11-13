@@ -1,4 +1,4 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>RV Road Trip — 3D</title><style>html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#a8cce3;font-family:system-ui,Arial;color:white}#hud{position:absolute;top:20px;left:20px;background:#10252ccc;padding:18px 22px;border:1px solid #ffffff30;border-radius:16px;backdrop-filter:blur(8px);min-width:230px}h2{margin:0 0 8px;font-size:19px}#distance{font-size:27px;font-weight:800}#speed{color:#c2dfeb}#help{position:absolute;bottom:18px;left:50%;transform:translateX(-50%);background:#10252cbb;padding:12px 20px;border-radius:12px;text-align:center;font-size:14px;max-width:calc(100% - 55px)}#prompt{position:absolute;bottom:85px;left:50%;transform:translateX(-50%);background:#10252cdd;border:1px solid #ffffff38;border-radius:12px;padding:10px 17px;font-weight:700;display:none;text-align:center;pointer-events:none}#mode{font-size:12px;color:#b7e3d8;margin:7px 0 0}#wood{font-size:13px;color:#f3d6a5;margin-top:5px}#crosshair{display:none;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none;opacity:.6}#crosshair:after{content:"+";font-size:22px}#win{display:none;position:absolute;inset:0;background:#071b21bd;align-items:center;justify-content:center;flex-direction:column;text-align:center}button{padding:12px 24px;border:0;border-radius:10px;font-weight:700;cursor:pointer}#error{display:none;position:absolute;inset:0;background:#182c35;align-items:center;justify-content:center;text-align:center;padding:30px}</style></head><body><div id="hud"><h2>🚐 Pine Lake Road Trip</h2><div id="distance">1.00 mi remaining</div><div id="speed">0 mph</div><div id="mode">DRIVING</div><div id="wood">Wood loaded: 0</div><div id="saveStatus" style="font-size:11px;opacity:.75;margin-top:5px">Autosave enabled</div><button id="newGame" style="margin-top:9px;padding:5px 10px;font-size:11px">New game / Clear save</button><div style="font-size:12px;opacity:.8;margin-top:8px">Destination: Pine Lake Campground</div></div><div id="help">W / ↑ Accelerate · S / ↓ Brake & reverse · A D / ← → Steer · E Exit RV · R Reset</div><div id="prompt"></div><div id="crosshair"></div><div id="win"><h1>🏕️ Welcome to Pine Lake!</h1><p>You drove one mile to the campground.</p><button onclick="location.reload()">Drive again</button></div><div id="error">3D engine couldn't load. Connect to the internet and refresh the page.</div><script type="module">
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>RV Road Trip — 3D</title><style>html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#a8cce3;font-family:system-ui,Arial;color:white}#hud{position:absolute;top:20px;left:20px;background:#10252ccc;padding:18px 22px;border:1px solid #ffffff30;border-radius:16px;backdrop-filter:blur(8px);min-width:230px}h2{margin:0 0 8px;font-size:19px}#distance{font-size:27px;font-weight:800}#speed{color:#c2dfeb}#help{position:absolute;bottom:18px;left:50%;transform:translateX(-50%);background:#10252cbb;padding:12px 20px;border-radius:12px;text-align:center;font-size:14px;max-width:calc(100% - 55px)}#prompt{position:absolute;bottom:85px;left:50%;transform:translateX(-50%);background:#10252cdd;border:1px solid #ffffff38;border-radius:12px;padding:10px 17px;font-weight:700;display:none;text-align:center;pointer-events:none}#mode{font-size:12px;color:#b7e3d8;margin:7px 0 0}#wood{font-size:13px;color:#f3d6a5;margin-top:5px}#crosshair{display:none;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none;opacity:.6}#crosshair:after{content:"+";font-size:22px}#win{display:none;position:absolute;inset:0;background:#071b21bd;align-items:center;justify-content:center;flex-direction:column;text-align:center}button{padding:12px 24px;border:0;border-radius:10px;font-weight:700;cursor:pointer}#error{display:none;position:absolute;inset:0;background:#182c35;align-items:center;justify-content:center;text-align:center;padding:30px}</style></head><body><div id="hud"><h2>🚐 Pine Lake Road Trip</h2><div id="distance">1.00 mi remaining</div><div id="speed">0 mph</div><div id="mode">DRIVING</div><div id="wood">Wood loaded: 0</div><div id="saveStatus" style="font-size:11px;opacity:.75;margin-top:5px">Autosave enabled</div><button id="newGame" style="margin-top:9px;padding:5px 10px;font-size:11px">New game / Clear save</button><div style="font-size:12px;opacity:.8;margin-top:8px">Destination: Pine Lake Campground</div></div><div id="help">↑ / W Accelerate · ↓ / S Brake · ← → Steer · Right-drag Camera · Scroll Zoom · E Exit</div><div id="prompt"></div><div id="crosshair"></div><div id="win"><h1>🏕️ Welcome to Pine Lake!</h1><p>You drove one mile to the campground.</p><button onclick="location.reload()">Drive again</button></div><div id="error">3D engine couldn't load. Connect to the internet and refresh the page.</div><script type="module">
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js';
 const scene=new THREE.Scene();scene.background=new THREE.Color(0xa9cce5);scene.fog=new THREE.FogExp2(0xa9cce5,.00043);
 const camera=new THREE.PerspectiveCamera(68,innerWidth/innerHeight,.1,4500);const renderer=new THREE.WebGLRenderer({antialias:true});renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.35;document.body.prepend(renderer.domElement);
@@ -184,7 +184,7 @@ const axeHead=cube(.57,.32,.13,axeSteel,-.24,.73,0,axe);
 axeHead.rotation.z=-.12;
 player.visible=false;
 let driving=true,speed=0,finished=false,wood=0,swingTime=0,axeCooldown=0,walkPhase=0;
-let footYaw=0,carriedWood=null,roofLoads=0;
+let footYaw=0,carriedWood=null,roofLoads=0,steerSmooth=0,throttleTime=0,camYaw=0,camPitch=.28,camDistance=14,mouseDown=false,lastMouseX=0,lastMouseY=0;
 const clock=new THREE.Clock(),camTarget=new THREE.Vector3();
 const distanceEl=document.getElementById('distance'),speedEl=document.getElementById('speed'),modeEl=document.getElementById('mode'),woodEl=document.getElementById('wood'),helpEl=document.getElementById('help'),promptEl=document.getElementById('prompt'),crosshairEl=document.getElementById('crosshair');
 const keys={};
@@ -465,7 +465,18 @@ addEventListener('keydown',e=>{
 });
 addEventListener('keyup',e=>keys[e.key.toLowerCase()]=false);
 addEventListener('blur',()=>{for(const k of Object.keys(keys))keys[k]=false});
-renderer.domElement.addEventListener('pointerdown',e=>{if(e.button===0)chopTree()});
+renderer.domElement.addEventListener('pointerdown',e=>{if(e.button===0)chopTree();if(e.button===2){mouseDown=true;lastMouseX=e.clientX;lastMouseY=e.clientY}});
+renderer.domElement.addEventListener('contextmenu',e=>e.preventDefault());
+addEventListener('pointerup',()=>mouseDown=false);
+addEventListener('pointermove',e=>{
+  // Mouse movement orbits the camera; right-drag works without pointer lock.
+  if(!mouseDown)return;
+  camYaw-=e.movementX*.005;
+  camPitch=THREE.MathUtils.clamp(camPitch-e.movementY*.003,-.15,1.15);
+});
+renderer.domElement.addEventListener('wheel',e=>{
+  e.preventDefault();camDistance=THREE.MathUtils.clamp(camDistance+Math.sign(e.deltaY)*1.5,6,28);
+},{passive:false});
 function loop(){
   requestAnimationFrame(loop);
   const dt=Math.min(clock.getDelta(),.05);
@@ -485,22 +496,28 @@ function loop(){
     if(driving){
       const accelerate=keys.w||keys.arrowup,brake=keys.s||keys.arrowdown;
       const steer=(keys.a||keys.arrowleft?1:0)-(keys.d||keys.arrowright?1:0);
-      if(accelerate)speed+=8*dt;
-      if(brake)speed-=12*dt;
-      if(!accelerate&&!brake)speed*=Math.pow(.965,dt*60);
-      speed=THREE.MathUtils.clamp(speed,-7,24);
-      if(Math.abs(speed)<.04)speed=0;
+      throttleTime=accelerate?Math.min(throttleTime+dt,7):Math.max(0,throttleTime-dt*1.5);
+      // Smooth acceleration with a progressively stronger throttle response.
+      const power=7+Math.min(throttleTime/5,1)*7;
+      if(accelerate)speed+=power*dt;
+      if(brake)speed-=speed>0?22*dt:9*dt;
+      if(!accelerate&&!brake)speed*=Math.pow(.991,dt*60);
+      speed=THREE.MathUtils.clamp(speed,-9,37);
+      if(Math.abs(speed)<.035)speed=0;
+      // Steering eases in/out and becomes less twitchy at high speed.
+      const steerTarget=steer*(.75+.25*Math.min(Math.abs(speed)/12,1));
+      steerSmooth=THREE.MathUtils.damp(steerSmooth,steerTarget,6,dt);
       // Sweep in short increments to avoid tunneling through thin obstacles.
       const steps=Math.max(1,Math.ceil(Math.abs(speed*dt)/.35));
       const travel=speed*dt/steps;
-      const turn=steer*speed*.018*dt/steps;
+      const turn=steerSmooth*Math.sign(speed)*Math.min(Math.abs(speed)/10,1)*1.15*dt/steps;
       for(let step=0;step<steps;step++){
         const nextYaw=rv.rotation.y+turn;
         const nextX=THREE.MathUtils.clamp(rv.position.x-Math.sin(nextYaw)*travel,-170,170);
         const nextZ=rv.position.z-Math.cos(nextYaw)*travel;
         if(vehicleBlocked(nextX,nextZ,nextYaw)){
           // Keep the vehicle at its last clear position and stop on impact.
-          speed=0;
+          speed=0;throttleTime=0;
           break;
         }
         rv.rotation.y=nextYaw;
@@ -508,7 +525,7 @@ function loop(){
         rv.position.z=nextZ;
       }
       for(const w of wheels)w.rotation.x-=speed*dt/.73;
-      body.rotation.z=THREE.MathUtils.lerp(body.rotation.z,-steer*speed*.002,dt*2);
+      body.rotation.z=THREE.MathUtils.lerp(body.rotation.z,-steerSmooth*Math.min(Math.abs(speed),28)*.002,dt*2);
       if(rv.position.z<=goalZ+6&&Math.abs(rv.position.x)<11){
         finished=true;speed=0;document.getElementById('win').style.display='flex';
       }
@@ -551,12 +568,14 @@ function loop(){
     behind=rv.localToWorld(new THREE.Vector3(interiorPos.x,3.05,interiorPos.z+1.05));
     target=rv.localToWorld(new THREE.Vector3(interiorPos.x,2.25,interiorPos.z-2));
   }else if(driving){
-    behind=new THREE.Vector3(Math.sin(rv.rotation.y)*14,8,Math.cos(rv.rotation.y)*14).add(center);
-    target=new THREE.Vector3(center.x-Math.sin(rv.rotation.y)*9,2.7,center.z-Math.cos(rv.rotation.y)*9);
+    const angle=rv.rotation.y+camYaw;
+    const horizontal=camDistance*Math.cos(camPitch);
+    behind=new THREE.Vector3(center.x+Math.sin(angle)*horizontal,center.y+3.2+camDistance*Math.sin(camPitch),center.z+Math.cos(angle)*horizontal);
+    target=new THREE.Vector3(center.x,center.y+2.35,center.z);
   }else{
-    // Follow over the player's shoulder; movement remains world-relative for easy navigation.
-    behind=new THREE.Vector3(center.x+5,center.y+4.8,center.z+9);
-    target=new THREE.Vector3(center.x,center.y+1.6,center.z-3);
+    const horizontal=camDistance*.7*Math.cos(camPitch),angle=camYaw;
+    behind=new THREE.Vector3(center.x+Math.sin(angle)*horizontal,center.y+2.3+camDistance*.7*Math.sin(camPitch),center.z+Math.cos(angle)*horizontal);
+    target=new THREE.Vector3(center.x,center.y+1.6,center.z);
   }
   camera.position.lerp(behind,Math.min(1,dt*5));
   camTarget.lerp(target,Math.min(1,dt*9));
