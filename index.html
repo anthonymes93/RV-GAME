@@ -81,6 +81,38 @@ function solidAt(x,z){
   }
   return false;
 }
+// Vehicle footprint uses multiple collision probes across its full width and length.
+// Unlike player collision, the RV ignores its own body.
+function vehicleBlocked(x,z,yaw){
+  const c=Math.cos(yaw),si=Math.sin(yaw);
+  const sample=(lx,lz)=>{
+    const px=x+lx*c+lz*si,pz=z-lx*si+lz*c;
+    const r=.48;
+    for(const cabin of cabins)if(circleRect(px,pz,cabin.x,cabin.z,6,5,r))return true;
+    for(const postX of [-9,9])if(circleRect(px,pz,postX,goalZ,.25,.25,r))return true;
+    for(const t of trees){
+      if(t.stage==='standing'||t.stage==='falling'){
+        if(Math.hypot(px-t.x,pz-t.z)<Math.max(.48*t.scale,.35)+r)return true;
+      }else if(t.stage==='fallen'){
+        if(circleSegment(px,pz,t.x,t.z,t.x+t.dir*5*t.scale,t.z,Math.max(.38*t.scale,.2)+r))return true;
+      }else if(t.stage==='pile'){
+        if(circleRect(px,pz,t.x,t.z,2*t.scale,1.4*t.scale,r))return true;
+      }
+    }
+    for(const hill of hills){
+      const top=40+hill.height/2;
+      const radius=hill.radius*THREE.MathUtils.clamp((top-1)/hill.height,0,1);
+      if(Math.hypot(px-hill.x,pz-hill.z)<radius+r)return true;
+    }
+    return false;
+  };
+  for(const lx of [-1.03,0,1.03]){
+    for(const lz of [-3.05,-1.5,0,1.5,3.05]){
+      if(sample(lx,lz))return true;
+    }
+  }
+  return false;
+}
 function movePlayer(dx,dz){
   const x=THREE.MathUtils.clamp(player.position.x+dx,-200,200);
   const z=THREE.MathUtils.clamp(player.position.z+dz,-1700,80);
@@ -210,10 +242,23 @@ function loop(){
       if(!accelerate&&!brake)speed*=Math.pow(.965,dt*60);
       speed=THREE.MathUtils.clamp(speed,-7,24);
       if(Math.abs(speed)<.04)speed=0;
-      rv.rotation.y+=steer*speed*.018*dt;
-      rv.position.x+=-Math.sin(rv.rotation.y)*speed*dt;
-      rv.position.z+=-Math.cos(rv.rotation.y)*speed*dt;
-      rv.position.x=THREE.MathUtils.clamp(rv.position.x,-170,170);
+      // Sweep in short increments to avoid tunneling through thin obstacles.
+      const steps=Math.max(1,Math.ceil(Math.abs(speed*dt)/.35));
+      const travel=speed*dt/steps;
+      const turn=steer*speed*.018*dt/steps;
+      for(let step=0;step<steps;step++){
+        const nextYaw=rv.rotation.y+turn;
+        const nextX=THREE.MathUtils.clamp(rv.position.x-Math.sin(nextYaw)*travel,-170,170);
+        const nextZ=rv.position.z-Math.cos(nextYaw)*travel;
+        if(vehicleBlocked(nextX,nextZ,nextYaw)){
+          // Keep the vehicle at its last clear position and stop on impact.
+          speed=0;
+          break;
+        }
+        rv.rotation.y=nextYaw;
+        rv.position.x=nextX;
+        rv.position.z=nextZ;
+      }
       for(const w of wheels)w.rotation.x-=speed*dt/.73;
       body.rotation.z=THREE.MathUtils.lerp(body.rotation.z,-steer*speed*.002,dt*2);
       if(rv.position.z<=goalZ+6&&Math.abs(rv.position.x)<11){
