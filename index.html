@@ -74,7 +74,12 @@ let seed=4382;function rand(){seed=(seed*1664525+1013904223)>>>0;return seed/429
 const trees=[];const trunkGeo=new THREE.CylinderGeometry(.45,.62,5,7),coneGeo=new THREE.ConeGeometry(3.4,10,8);function addTree(x,z,s){const t=new THREE.Group();t.position.set(x,0,z);t.scale.setScalar(s);const trunk=new THREE.Mesh(trunkGeo,treeBark);trunk.position.y=2.5;t.add(trunk);for(let j=0;j<3;j++){const c=new THREE.Mesh(coneGeo,j%2?pine2:pine);c.position.y=6+j*2.7;c.scale.set(1-j*.17,.8,1-j*.17);t.add(c)}scene.add(t);trees.push({group:t,x,z,scale:s,hits:0,stage:"standing",fall:0,dir:1,pile:null})}
 for(let z=65;z>-1700;z-=15){for(const side of [-1,1]){if(rand()>.1)addTree(side*(24+rand()*90),z+(rand()-.5)*20,.65+rand()*1.3);if(rand()>.5)addTree(side*(110+rand()*90),z+(rand()-.5)*30,.9+rand()*1.3)}}
 // Distant hills.
-const hills=[];const hillMat=mat(0x68816c);textured(hillMat,'rock',5,4);for(let i=0;i<32;i++){const x=(rand()-.5)*2100,z=-200-rand()*2100;const radius=100+rand()*130,height=140+rand()*160;const hill=new THREE.Mesh(new THREE.ConeGeometry(radius,height,7),hillMat);hill.position.set(x,40,z);scene.add(hill);hills.push({x,z,radius,height})}
+const hills=[];const hillMat=mat(0x68816c);textured(hillMat,'rock',5,4);for(let i=0;i<32;i++){const x=(rand()-.5)*2100,z=-200-rand()*2100;const radius=100+rand()*130,height=140+rand()*160;// Keep a generous clear corridor around the road and gas station.
+const clearance=Math.abs(x)-radius;
+const stationDistance=Math.hypot(x-29,z+555);
+if(clearance<65||stationDistance<radius+48)continue;
+const hill=new THREE.Mesh(new THREE.ConeGeometry(radius,height,12),hillMat);
+hill.position.set(x,40,z);scene.add(hill);hills.push({x,z,radius,height})}
 // Roadside cabin and destination campsite.
 const cabins=[{x:35,z:-350},{x:-42,z:-960},{x:35,z:-1590}];function cabin(x,z){cube(12,5,10,mat(0x916e50),x,2.5,z);const roof=new THREE.Mesh(new THREE.ConeGeometry(9,4,4),mat(0x493b35));roof.rotation.y=Math.PI/4;roof.scale.z=.9;roof.position.set(x,7,z);scene.add(roof);cube(2,2,.15,glass,x-3,3,z+5.1);cube(2,3,.15,mat(0x4e3428),x+2,1.5,z+5.12)}cabin(35,-350);cabin(-42,-960);cabin(35,-1590);
 const goalZ=-1609.344;const goal=new THREE.Group();goal.position.set(0,0,goalZ);scene.add(goal);cube(20,.15,9,mat(0x8d8068),0,.1,goalZ);for(const x of [-9,9])cube(.5,8,.5,treeBark,x,4,goalZ);cube(19,2.8,.4,mat(0x476e4a),0,7.5,goalZ);const signCanvas=document.createElement('canvas');signCanvas.width=1024;signCanvas.height=170;const ctx=signCanvas.getContext('2d');ctx.fillStyle='#e9f2d5';ctx.font='bold 73px system-ui';ctx.textAlign='center';ctx.fillText('PINE LAKE CAMPGROUND',512,112);const sign=new THREE.Mesh(new THREE.PlaneGeometry(17,2.8),new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(signCanvas),transparent:true,side:THREE.DoubleSide}));sign.position.set(0,7.5,goalZ+.27);scene.add(sign);
@@ -250,10 +255,8 @@ function solidAt(x,z){
     }
   }
   for(const hill of hills){
-    // Cone radius at player height; ignore fully buried cones.
-    const top=40+hill.height/2;
-    const radius=hill.radius*THREE.MathUtils.clamp((top-1)/hill.height,0,1);
-    if(Math.hypot(x-hill.x,z-hill.z)<radius+playerRadius)return true;
+    // Collision matches the actual visible cone footprint, not a larger invisible disk.
+    if(Math.hypot(x-hill.x,z-hill.z)<hill.radius+playerRadius)return true;
   }
   return false;
 }
@@ -277,9 +280,7 @@ function vehicleBlocked(x,z,yaw){
       }
     }
     for(const hill of hills){
-      const top=40+hill.height/2;
-      const radius=hill.radius*THREE.MathUtils.clamp((top-1)/hill.height,0,1);
-      if(Math.hypot(px-hill.x,pz-hill.z)<radius+r)return true;
+      if(Math.hypot(px-hill.x,pz-hill.z)<hill.radius+r)return true;
     }
     return false;
   };
