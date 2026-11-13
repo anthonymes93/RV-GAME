@@ -1,4 +1,4 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>RV Road Trip — 3D</title><style>html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#a8cce3;font-family:system-ui,Arial;color:white}#hud{position:absolute;top:20px;left:20px;background:#10252ccc;padding:18px 22px;border:1px solid #ffffff30;border-radius:16px;backdrop-filter:blur(8px);min-width:230px}h2{margin:0 0 8px;font-size:19px}#distance{font-size:27px;font-weight:800}#speed{color:#c2dfeb}#help{position:absolute;bottom:18px;left:50%;transform:translateX(-50%);background:#10252cbb;padding:12px 20px;border-radius:12px;text-align:center;font-size:14px;max-width:calc(100% - 55px)}#prompt{position:absolute;bottom:85px;left:50%;transform:translateX(-50%);background:#10252cdd;border:1px solid #ffffff38;border-radius:12px;padding:10px 17px;font-weight:700;display:none;text-align:center;pointer-events:none}#mode{font-size:12px;color:#b7e3d8;margin:7px 0 0}#wood{font-size:13px;color:#f3d6a5;margin-top:5px}#crosshair{display:none;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none;opacity:.6}#crosshair:after{content:"+";font-size:22px}#win{display:none;position:absolute;inset:0;background:#071b21bd;align-items:center;justify-content:center;flex-direction:column;text-align:center}button{padding:12px 24px;border:0;border-radius:10px;font-weight:700;cursor:pointer}#error{display:none;position:absolute;inset:0;background:#182c35;align-items:center;justify-content:center;text-align:center;padding:30px}</style></head><body><div id="hud"><h2>🚐 Pine Lake Road Trip</h2><div id="distance">1.00 mi remaining</div><div id="speed">0 mph</div><div id="mode">DRIVING</div><div id="wood">Wood collected: 0</div><div style="font-size:12px;opacity:.8;margin-top:8px">Destination: Pine Lake Campground</div></div><div id="help">W / ↑ Accelerate · S / ↓ Brake & reverse · A D / ← → Steer · E Exit RV · R Reset</div><div id="prompt"></div><div id="crosshair"></div><div id="win"><h1>🏕️ Welcome to Pine Lake!</h1><p>You drove one mile to the campground.</p><button onclick="location.reload()">Drive again</button></div><div id="error">3D engine couldn't load. Connect to the internet and refresh the page.</div><script type="module">
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>RV Road Trip — 3D</title><style>html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#a8cce3;font-family:system-ui,Arial;color:white}#hud{position:absolute;top:20px;left:20px;background:#10252ccc;padding:18px 22px;border:1px solid #ffffff30;border-radius:16px;backdrop-filter:blur(8px);min-width:230px}h2{margin:0 0 8px;font-size:19px}#distance{font-size:27px;font-weight:800}#speed{color:#c2dfeb}#help{position:absolute;bottom:18px;left:50%;transform:translateX(-50%);background:#10252cbb;padding:12px 20px;border-radius:12px;text-align:center;font-size:14px;max-width:calc(100% - 55px)}#prompt{position:absolute;bottom:85px;left:50%;transform:translateX(-50%);background:#10252cdd;border:1px solid #ffffff38;border-radius:12px;padding:10px 17px;font-weight:700;display:none;text-align:center;pointer-events:none}#mode{font-size:12px;color:#b7e3d8;margin:7px 0 0}#wood{font-size:13px;color:#f3d6a5;margin-top:5px}#crosshair{display:none;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none;opacity:.6}#crosshair:after{content:"+";font-size:22px}#win{display:none;position:absolute;inset:0;background:#071b21bd;align-items:center;justify-content:center;flex-direction:column;text-align:center}button{padding:12px 24px;border:0;border-radius:10px;font-weight:700;cursor:pointer}#error{display:none;position:absolute;inset:0;background:#182c35;align-items:center;justify-content:center;text-align:center;padding:30px}</style></head><body><div id="hud"><h2>🚐 Pine Lake Road Trip</h2><div id="distance">1.00 mi remaining</div><div id="speed">0 mph</div><div id="mode">DRIVING</div><div id="wood">Wood loaded: 0</div><div style="font-size:12px;opacity:.8;margin-top:8px">Destination: Pine Lake Campground</div></div><div id="help">W / ↑ Accelerate · S / ↓ Brake & reverse · A D / ← → Steer · E Exit RV · R Reset</div><div id="prompt"></div><div id="crosshair"></div><div id="win"><h1>🏕️ Welcome to Pine Lake!</h1><p>You drove one mile to the campground.</p><button onclick="location.reload()">Drive again</button></div><div id="error">3D engine couldn't load. Connect to the internet and refresh the page.</div><script type="module">
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js';
 const scene=new THREE.Scene();scene.background=new THREE.Color(0xa9cce5);scene.fog=new THREE.FogExp2(0xa9cce5,.00043);
 const camera=new THREE.PerspectiveCamera(68,innerWidth/innerHeight,.1,4500);const renderer=new THREE.WebGLRenderer({antialias:true});renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.35;document.body.prepend(renderer.domElement);
@@ -98,7 +98,7 @@ const axeHead=cube(.57,.32,.13,axeSteel,-.24,.73,0,axe);
 axeHead.rotation.z=-.12;
 player.visible=false;
 let driving=true,speed=0,finished=false,wood=0,swingTime=0,axeCooldown=0,walkPhase=0;
-let footYaw=0;
+let footYaw=0,carriedWood=null,roofLoads=0;
 const clock=new THREE.Clock(),camTarget=new THREE.Vector3();
 const distanceEl=document.getElementById('distance'),speedEl=document.getElementById('speed'),modeEl=document.getElementById('mode'),woodEl=document.getElementById('wood'),helpEl=document.getElementById('help'),promptEl=document.getElementById('prompt'),crosshairEl=document.getElementById('crosshair');
 const keys={};
@@ -217,6 +217,36 @@ function makeWoodPile(t){
   scene.add(pile);
   t.pile=pile;
 }
+function nearbyWood(){let best=null,dist=4.5;for(const t of trees){if(t.stage!=='pile'||!t.pile)continue;const d=distance2D(player.position,t.pile.position);if(d<dist){best=t;dist=d}}return best}
+function handleWood(){
+  if(driving||finished)return;
+  if(carriedWood){
+    if(distance2D(player.position,rv.position)<6.2){
+      // Load onto the roof, in rows that remain attached while the RV moves.
+      const pile=carriedWood.pile;
+      pile.removeFromParent();rv.add(pile);
+      pile.scale.setScalar(.55);
+      const slot=roofLoads++;
+      pile.position.set((slot%2===0?-.63:.63),4.04+Math.floor(slot/8)*.48,-2.2+(Math.floor(slot/2)%4)*1.45);
+      pile.rotation.set(0,0,0);
+      carriedWood.stage='loaded';carriedWood=null;
+      wood+=3;woodEl.textContent='Wood loaded: '+wood;
+    }else{
+      // Put the bundle back down when away from the RV.
+      const pile=carriedWood.pile;pile.removeFromParent();scene.add(pile);
+      pile.position.set(player.position.x+1,carriedWood.scale*.23,player.position.z);
+      pile.scale.setScalar(1);carriedWood.stage='pile';carriedWood=null;
+    }
+    return;
+  }
+  const t=nearbyWood();if(!t)return;
+  carriedWood=t;t.stage='carried';
+  t.pile.removeFromParent();player.add(t.pile);
+  t.pile.position.set(0,1.1,-.75);
+  t.pile.rotation.set(0,0,0);
+  t.pile.scale.setScalar(.55);
+}
+
 function toggleVehicle(){
   if(finished)return;
   if(driving){
@@ -237,9 +267,9 @@ function toggleVehicle(){
     footYaw=rv.rotation.y;
     player.rotation.y=footYaw;
     modeEl.textContent='ON FOOT';
-    helpEl.textContent='WASD / arrows Walk · Shift Run · F / Click Chop nearby tree · E Enter RV · R Reset';
+    helpEl.textContent='WASD Walk · Shift Run · F Chop · G Pick up / Load wood · E Enter RV · R Reset';
     crosshairEl.style.display='block';
-  }else if(distance2D(player.position,rv.position)<5.5){
+  }else if(!carriedWood&&distance2D(player.position,rv.position)<5.5){
     driving=true;player.visible=false;speed=0;
     modeEl.textContent='DRIVING';
     helpEl.textContent='W / ↑ Accelerate · S / ↓ Brake & reverse · A D / ← → Steer · E Exit RV · R Reset';
@@ -261,18 +291,18 @@ function chopTree(){
       t.stage='pile';
       scene.remove(t.group);
       makeWoodPile(t);
-      wood+=3;
-      woodEl.textContent='Wood collected: '+wood;
+      // The wood remains in the world until picked up and loaded.
     }
   }
 }
 addEventListener('keydown',e=>{
   const k=e.key.toLowerCase();
   if(['arrowup','arrowdown','arrowleft','arrowright',' '].includes(k))e.preventDefault();
-  if(e.repeat&&['e','f','r'].includes(k))return;
+  if(e.repeat&&['e','f','g','r'].includes(k))return;
   keys[k]=true;
   if(k==='e')toggleVehicle();
   if(k==='f')chopTree();
+  if(k==='g')handleWood();
   if(k==='r')location.reload();
 });
 addEventListener('keyup',e=>keys[e.key.toLowerCase()]=false);
@@ -364,9 +394,10 @@ function loop(){
   distanceEl.textContent=remaining.toFixed(2)+' mi remaining';
   speedEl.textContent=driving?Math.round(Math.abs(speed)*2.23694)+' mph':'Exploring on foot';
   const close=driving?null:nearestTree();
+  const nearPile=!driving&&!carriedWood?nearbyWood():null;
   const nearRV=!driving&&distance2D(player.position,rv.position)<5.5;
-  promptEl.style.display=close||nearRV?'block':'none';
-  promptEl.textContent=close?'F / Click: '+(close.stage==='fallen'?'Chop fallen tree':'Chop tree')+' ('+(3-close.hits)+' hits left)':nearRV?'E: Enter RV':'';
+  promptEl.style.display=close||nearRV||nearPile||carriedWood?'block':'none';
+  promptEl.textContent=carriedWood?(distance2D(player.position,rv.position)<6.2?'G: Load wood onto RV roof':'G: Put wood down'):(nearPile?'G: Pick up chopped wood':close?'F / Click: '+(close.stage==='fallen'?'Chop fallen tree':'Chop tree')+' ('+(3-close.hits)+' hits left)':nearRV?'E: Enter RV':'');
   renderer.render(scene,camera);
 }
 camera.position.set(0,8,17);loop();
