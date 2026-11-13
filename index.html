@@ -14,9 +14,9 @@ let seed=4382;function rand(){seed=(seed*1664525+1013904223)>>>0;return seed/429
 const trees=[];const trunkGeo=new THREE.CylinderGeometry(.45,.62,5,7),coneGeo=new THREE.ConeGeometry(3.4,10,8);function addTree(x,z,s){const t=new THREE.Group();t.position.set(x,0,z);t.scale.setScalar(s);const trunk=new THREE.Mesh(trunkGeo,treeBark);trunk.position.y=2.5;t.add(trunk);for(let j=0;j<3;j++){const c=new THREE.Mesh(coneGeo,j%2?pine2:pine);c.position.y=6+j*2.7;c.scale.set(1-j*.17,.8,1-j*.17);t.add(c)}scene.add(t);trees.push({group:t,x,z,scale:s,hits:0,stage:"standing",fall:0,dir:1,pile:null})}
 for(let z=65;z>-1700;z-=15){for(const side of [-1,1]){if(rand()>.1)addTree(side*(24+rand()*90),z+(rand()-.5)*20,.65+rand()*1.3);if(rand()>.5)addTree(side*(110+rand()*90),z+(rand()-.5)*30,.9+rand()*1.3)}}
 // Distant hills.
-const hillMat=mat(0x68816c);for(let i=0;i<32;i++){const x=(rand()-.5)*2100,z=-200-rand()*2100;const hill=new THREE.Mesh(new THREE.ConeGeometry(100+rand()*130,140+rand()*160,7),hillMat);hill.position.set(x,40,z);scene.add(hill)}
+const hills=[];const hillMat=mat(0x68816c);for(let i=0;i<32;i++){const x=(rand()-.5)*2100,z=-200-rand()*2100;const radius=100+rand()*130,height=140+rand()*160;const hill=new THREE.Mesh(new THREE.ConeGeometry(radius,height,7),hillMat);hill.position.set(x,40,z);scene.add(hill);hills.push({x,z,radius,height})}
 // Roadside cabin and destination campsite.
-function cabin(x,z){cube(12,5,10,mat(0x916e50),x,2.5,z);const roof=new THREE.Mesh(new THREE.ConeGeometry(9,4,4),mat(0x493b35));roof.rotation.y=Math.PI/4;roof.scale.z=.9;roof.position.set(x,7,z);scene.add(roof);cube(2,2,.15,glass,x-3,3,z+5.1);cube(2,3,.15,mat(0x4e3428),x+2,1.5,z+5.12)}cabin(35,-350);cabin(-42,-960);cabin(35,-1590);
+const cabins=[{x:35,z:-350},{x:-42,z:-960},{x:35,z:-1590}];function cabin(x,z){cube(12,5,10,mat(0x916e50),x,2.5,z);const roof=new THREE.Mesh(new THREE.ConeGeometry(9,4,4),mat(0x493b35));roof.rotation.y=Math.PI/4;roof.scale.z=.9;roof.position.set(x,7,z);scene.add(roof);cube(2,2,.15,glass,x-3,3,z+5.1);cube(2,3,.15,mat(0x4e3428),x+2,1.5,z+5.12)}cabin(35,-350);cabin(-42,-960);cabin(35,-1590);
 const goalZ=-1609.344;const goal=new THREE.Group();goal.position.set(0,0,goalZ);scene.add(goal);cube(20,.15,9,mat(0x8d8068),0,.1,goalZ);for(const x of [-9,9])cube(.5,8,.5,treeBark,x,4,goalZ);cube(19,2.8,.4,mat(0x476e4a),0,7.5,goalZ);const signCanvas=document.createElement('canvas');signCanvas.width=1024;signCanvas.height=170;const ctx=signCanvas.getContext('2d');ctx.fillStyle='#e9f2d5';ctx.font='bold 73px system-ui';ctx.textAlign='center';ctx.fillText('PINE LAKE CAMPGROUND',512,112);const sign=new THREE.Mesh(new THREE.PlaneGeometry(17,2.8),new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(signCanvas),transparent:true,side:THREE.DoubleSide}));sign.position.set(0,7.5,goalZ+.27);scene.add(sign);
 // Detailed, original procedural motorhome model.
 const rv=new THREE.Group();scene.add(rv);const body=new THREE.Group();rv.add(body);cube(2.8,2.5,6.9,rvWhite,0,2.35,0,body);cube(2.86,.45,6.95,rvBlue,0,1.43,0,body);cube(2.9,.18,7.1,rvWhite,0,3.7,0,body);cube(2.65,1.45,1.4,rvWhite,0,3.15,-2.7,body);cube(2.45,.92,.1,glass,0,2.95,-3.52,body);cube(2.45,.88,.09,glass,0,2.95,3.5,body);for(const x of [-1.43,1.43]){for(const z of [-1.6,.7,2.1])cube(.08,.85,1.15,glass,x,2.8,z,body)}cube(.1,1.8,.9,rvBlue,1.46,2.5,-.35,body);cube(2.7,.35,.2,silver,0,1.18,-3.55,body);cube(2.7,.3,.2,silver,0,1.2,3.53,body);cube(1.2,.2,.15,mat(0xffe9ba),0,2.05,-3.58,body);for(const x of [-1.05,1.05]){cube(.52,.28,.1,mat(0xffe8a5),x,1.8,-3.55,body);cube(.45,.28,.1,mat(0xa93228),x,1.8,3.55,body)}
@@ -43,6 +43,52 @@ const clock=new THREE.Clock(),camTarget=new THREE.Vector3();
 const distanceEl=document.getElementById('distance'),speedEl=document.getElementById('speed'),modeEl=document.getElementById('mode'),woodEl=document.getElementById('wood'),helpEl=document.getElementById('help'),promptEl=document.getElementById('prompt'),crosshairEl=document.getElementById('crosshair');
 const keys={};
 function distance2D(a,b){return Math.hypot(a.x-b.x,a.z-b.z)}
+// Circular player footprint; solid obstacles use circles, rectangles or capsules.
+// Collision is tested independently on X and Z to allow sliding along walls.
+const playerRadius=.42;
+function circleRect(x,z,cx,cz,halfX,halfZ,r=playerRadius){
+  const dx=Math.max(Math.abs(x-cx)-halfX,0);
+  const dz=Math.max(Math.abs(z-cz)-halfZ,0);
+  return dx*dx+dz*dz<(r*r);
+}
+function circleSegment(x,z,ax,az,bx,bz,r){
+  const dx=bx-ax,dz=bz-az,den=dx*dx+dz*dz;
+  const t=den?THREE.MathUtils.clamp(((x-ax)*dx+(z-az)*dz)/den,0,1):0;
+  return Math.hypot(x-ax-dx*t,z-az-dz*t)<r;
+}
+function solidAt(x,z){
+  // Rotated motorhome footprint (length along local Z).
+  const dx=x-rv.position.x,dz=z-rv.position.z,c=Math.cos(rv.rotation.y),si=Math.sin(rv.rotation.y);
+  if(circleRect(dx*c+dz*si,-dx*si+dz*c,0,0,1.52,3.63))return true;
+  for(const cabin of cabins)if(circleRect(x,z,cabin.x,cabin.z,6,5))return true;
+  // Campground entrance posts, but not the open road through them.
+  for(const postX of [-9,9])if(circleRect(x,z,postX,goalZ,.25,.25))return true;
+  for(const t of trees){
+    if(t.stage==='standing'||t.stage==='falling'){
+      if(Math.hypot(x-t.x,z-t.z)<Math.max(.48*t.scale,.35)+playerRadius)return true;
+    }else if(t.stage==='fallen'){
+      // Tree rotates around its base; the fallen trunk lies along the X axis.
+      if(circleSegment(x,z,t.x,t.z,t.x+t.dir*5*t.scale,t.z,Math.max(.38*t.scale,.2)+playerRadius))return true;
+    }else if(t.stage==='pile'){
+      if(circleRect(x,z,t.x,t.z,2*t.scale,1.4*t.scale))return true;
+    }
+  }
+  for(const hill of hills){
+    // Cone radius at player height; ignore fully buried cones.
+    const top=40+hill.height/2;
+    const radius=hill.radius*THREE.MathUtils.clamp((top-1)/hill.height,0,1);
+    if(Math.hypot(x-hill.x,z-hill.z)<radius+playerRadius)return true;
+  }
+  return false;
+}
+function movePlayer(dx,dz){
+  const x=THREE.MathUtils.clamp(player.position.x+dx,-200,200);
+  const z=THREE.MathUtils.clamp(player.position.z+dz,-1700,80);
+  // Escape is allowed if a pre-existing overlap is being reduced.
+  const before=solidAt(player.position.x,player.position.z);
+  if(!solidAt(x,player.position.z)||before)player.position.x=x;
+  if(!solidAt(player.position.x,z)||before)player.position.z=z;
+}
 function nearestTree(){
   let best=null,dist=5;
   for(const t of trees){
@@ -85,8 +131,17 @@ function toggleVehicle(){
     driving=false;speed=0;
     player.visible=true;
     player.position.copy(rv.position);
-    player.position.x+=Math.cos(rv.rotation.y)*3.25;
-    player.position.z-=Math.sin(rv.rotation.y)*3.25;
+    // Choose a clear doorway position beside the RV.
+    const offsets=[3.25,4.3,5.4,6.5,8];
+    for(const side of [1,-1]){
+      let placed=false;
+      for(const offset of offsets){
+        const x=rv.position.x+Math.cos(rv.rotation.y)*offset*side;
+        const z=rv.position.z-Math.sin(rv.rotation.y)*offset*side;
+        if(!solidAt(x,z)){player.position.set(x,0,z);placed=true;break}
+      }
+      if(placed)break;
+    }
     footYaw=rv.rotation.y;
     player.rotation.y=footYaw;
     modeEl.textContent='ON FOOT';
@@ -171,8 +226,9 @@ function loop(){
       if(magnitude){
         const mx=sideways/magnitude,mz=-forward/magnitude;
         const pace=keys.shift?9:5;
-        player.position.x=THREE.MathUtils.clamp(player.position.x+mx*pace*dt,-200,200);
-        player.position.z=THREE.MathUtils.clamp(player.position.z+mz*pace*dt,-1700,80);
+        // Small steps prevent sprinting through thin objects on slow frames.
+        const steps=Math.max(1,Math.ceil(pace*dt/.18));
+        for(let step=0;step<steps;step++)movePlayer(mx*pace*dt/steps,mz*pace*dt/steps);
         footYaw=Math.atan2(-mx,-mz);
         player.rotation.y=THREE.MathUtils.lerp(player.rotation.y,footYaw,Math.min(1,dt*12));
         walkPhase+=pace*dt*2.2;
