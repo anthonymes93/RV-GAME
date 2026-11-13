@@ -1,4 +1,4 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>RV Road Trip — 3D</title><style>html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#a8cce3;font-family:system-ui,Arial;color:white}#hud{position:absolute;top:20px;left:20px;background:#10252ccc;padding:18px 22px;border:1px solid #ffffff30;border-radius:16px;backdrop-filter:blur(8px);min-width:230px}h2{margin:0 0 8px;font-size:19px}#distance{font-size:27px;font-weight:800}#speed{color:#c2dfeb}#help{position:absolute;bottom:18px;left:50%;transform:translateX(-50%);background:#10252cbb;padding:12px 20px;border-radius:12px;text-align:center;font-size:14px;max-width:calc(100% - 55px)}#prompt{position:absolute;bottom:85px;left:50%;transform:translateX(-50%);background:#10252cdd;border:1px solid #ffffff38;border-radius:12px;padding:10px 17px;font-weight:700;display:none;text-align:center;pointer-events:none}#mode{font-size:12px;color:#b7e3d8;margin:7px 0 0}#wood{font-size:13px;color:#f3d6a5;margin-top:5px}#crosshair{display:none;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none;opacity:.6}#crosshair:after{content:"+";font-size:22px}#win{display:none;position:absolute;inset:0;background:#071b21bd;align-items:center;justify-content:center;flex-direction:column;text-align:center}button{padding:12px 24px;border:0;border-radius:10px;font-weight:700;cursor:pointer}#error{display:none;position:absolute;inset:0;background:#182c35;align-items:center;justify-content:center;text-align:center;padding:30px}</style></head><body><div id="hud"><h2>🚐 Pine Lake Road Trip</h2><div id="distance">1.00 mi remaining</div><div id="speed">0 mph</div><div id="mode">DRIVING</div><div id="wood">Wood loaded: 0</div><div id="saveStatus" style="font-size:11px;opacity:.75;margin-top:5px">Autosave enabled</div><button id="newGame" style="margin-top:9px;padding:5px 10px;font-size:11px">New game / Clear save</button><div style="font-size:12px;opacity:.8;margin-top:8px">Destination: Pine Lake Campground</div></div><div id="help">↑ / W Accelerate · ↓ / S Brake · ← → Steer · Right-drag Camera · Scroll Zoom · E Exit</div><div id="prompt"></div><div id="crosshair"></div><div id="win"><h1>🏕️ Welcome to Pine Lake!</h1><p>You drove one mile to the campground.</p><button onclick="location.reload()">Drive again</button></div><div id="error">3D engine couldn't load. Connect to the internet and refresh the page.</div><script type="module">
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>RV Road Trip — 3D</title><style>html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#a8cce3;font-family:system-ui,Arial;color:white}#hud{position:absolute;top:20px;left:20px;background:#10252ccc;padding:18px 22px;border:1px solid #ffffff30;border-radius:16px;backdrop-filter:blur(8px);min-width:230px}h2{margin:0 0 8px;font-size:19px}#distance{font-size:27px;font-weight:800}#speed{color:#c2dfeb}#help{position:absolute;bottom:18px;left:50%;transform:translateX(-50%);background:#10252cbb;padding:12px 20px;border-radius:12px;text-align:center;font-size:14px;max-width:calc(100% - 55px)}#prompt{position:absolute;bottom:85px;left:50%;transform:translateX(-50%);background:#10252cdd;border:1px solid #ffffff38;border-radius:12px;padding:10px 17px;font-weight:700;display:none;text-align:center;pointer-events:none}#mode{font-size:12px;color:#b7e3d8;margin:7px 0 0}#wood{font-size:13px;color:#f3d6a5;margin-top:5px}#crosshair{display:none;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none;opacity:.6}#crosshair:after{content:"+";font-size:22px}#win{display:none;position:absolute;inset:0;background:#071b21bd;align-items:center;justify-content:center;flex-direction:column;text-align:center}button{padding:12px 24px;border:0;border-radius:10px;font-weight:700;cursor:pointer}#error{display:none;position:absolute;inset:0;background:#182c35;align-items:center;justify-content:center;text-align:center;padding:30px}</style></head><body><div id="hud"><h2>🚐 Pine Lake Road Trip</h2><div id="distance">1.00 mi remaining</div><div id="speed">0 mph</div><div id="mode">DRIVING</div><div id="wood">Wood loaded: 0</div><div id="saveStatus" style="font-size:11px;opacity:.75;margin-top:5px">Autosave enabled</div><button id="newGame" style="margin-top:9px;padding:5px 10px;font-size:11px">New game / Clear save</button><div style="font-size:12px;opacity:.8;margin-top:8px">Destination: Pine Lake Campground</div></div><div id="help">↑ / W Accelerate · ↓ / S Brake · ← → Steer · Right-drag Camera · Scroll Zoom · E Exit</div><div id="prompt"></div><canvas id="minimap" width="220" height="220" aria-label="Game minimap" style="position:absolute;right:18px;bottom:18px;width:190px;height:190px;border:2px solid #ffffff88;border-radius:14px;background:#18352aee;box-shadow:0 5px 24px #0008;pointer-events:none"></canvas><div id="crosshair"></div><div id="win"><h1>🏕️ Welcome to Pine Lake!</h1><p>You drove one mile to the campground.</p><button onclick="location.reload()">Drive again</button></div><div id="error">3D engine couldn't load. Connect to the internet and refresh the page.</div><script type="module">
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js';
 const scene=new THREE.Scene();scene.background=new THREE.Color(0xa9cce5);scene.fog=new THREE.FogExp2(0xa9cce5,.00043);
 const camera=new THREE.PerspectiveCamera(68,innerWidth/innerHeight,.1,4500);const renderer=new THREE.WebGLRenderer({antialias:true});renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.35;document.body.prepend(renderer.domElement);
@@ -78,6 +78,35 @@ const hills=[];const hillMat=mat(0x68816c);textured(hillMat,'rock',5,4);for(let 
 // Roadside cabin and destination campsite.
 const cabins=[{x:35,z:-350},{x:-42,z:-960},{x:35,z:-1590}];function cabin(x,z){cube(12,5,10,mat(0x916e50),x,2.5,z);const roof=new THREE.Mesh(new THREE.ConeGeometry(9,4,4),mat(0x493b35));roof.rotation.y=Math.PI/4;roof.scale.z=.9;roof.position.set(x,7,z);scene.add(roof);cube(2,2,.15,glass,x-3,3,z+5.1);cube(2,3,.15,mat(0x4e3428),x+2,1.5,z+5.12)}cabin(35,-350);cabin(-42,-960);cabin(35,-1590);
 const goalZ=-1609.344;const goal=new THREE.Group();goal.position.set(0,0,goalZ);scene.add(goal);cube(20,.15,9,mat(0x8d8068),0,.1,goalZ);for(const x of [-9,9])cube(.5,8,.5,treeBark,x,4,goalZ);cube(19,2.8,.4,mat(0x476e4a),0,7.5,goalZ);const signCanvas=document.createElement('canvas');signCanvas.width=1024;signCanvas.height=170;const ctx=signCanvas.getContext('2d');ctx.fillStyle='#e9f2d5';ctx.font='bold 73px system-ui';ctx.textAlign='center';ctx.fillText('PINE LAKE CAMPGROUND',512,112);const sign=new THREE.Mesh(new THREE.PlaneGeometry(17,2.8),new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(signCanvas),transparent:true,side:THREE.DoubleSide}));sign.position.set(0,7.5,goalZ+.27);scene.add(sign);
+// Roadside fuel station, with paved forecourt and accessible pumps.
+const stationX=29,stationZ=-555;
+const stationSolids=[{x:stationX+9,z:stationZ-7,w:13,d:11},{x:stationX-3,z:stationZ+3,w:1.1,d:1.5},{x:stationX+3,z:stationZ+3,w:1.1,d:1.5}];
+// Keep the station and its entrance free of trees.
+for(let i=trees.length-1;i>=0;i--){
+  const t=trees[i];
+  if(t.x>9&&t.x<49&&Math.abs(t.z-stationZ)<27){scene.remove(t.group);trees.splice(i,1)}
+}
+const fuelConcrete=mat(0x747a7b),fuelRed=mat(0xb8272c),fuelDark=mat(0x263238),fuelBright=mat(0xf4f0e3);
+cube(44,.14,43,fuelConcrete,28,.08,stationZ);
+cube(13,5.5,11,fuelBright,stationX+9,2.85,stationZ-7);
+cube(13,1.0,11,fuelRed,stationX+9,5.95,stationZ-7);
+cube(10,2.8,.12,glass,stationX+9,2.85,stationZ-1.43);
+cube(2.2,3,.15,fuelDark,stationX+12,1.55,stationZ-1.32);
+for(const x of [stationX-3,stationX+3]){
+  cube(1.1,2.2,1.5,fuelRed,x,1.2,stationZ+3);
+  cube(.83,.67,.12,fuelDark,x,1.65,stationZ+3.82);
+  cube(.58,.33,.13,mat(0x9ed8ca),x,1.8,stationZ+3.9);
+  cube(.13,.8,.13,fuelDark,x+.63,1.36,stationZ+3);
+  cube(.15,4.2,.15,fuelBright,x,3.2,stationZ+3);
+}
+cube(14,.5,10,fuelRed,stationX,5.25,stationZ+3);
+for(const x of [stationX-6.5,stationX+6.5])for(const z of [stationZ-1,stationZ+7])cube(.35,4.6,.35,fuelBright,x,2.8,z);
+cube(1.0,8,.7,fuelDark,10,4,stationZ-12);
+cube(5,2,.6,fuelRed,10,8.4,stationZ-12);
+const gasLabelCanvas=document.createElement('canvas');gasLabelCanvas.width=512;gasLabelCanvas.height=128;
+const gasCtx=gasLabelCanvas.getContext('2d');gasCtx.fillStyle='#fff';gasCtx.font='bold 76px Arial';gasCtx.textAlign='center';gasCtx.fillText('FUEL',256,91);
+const gasSign=new THREE.Mesh(new THREE.PlaneGeometry(4.8,1.3),new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(gasLabelCanvas),transparent:true,side:THREE.DoubleSide}));
+gasSign.position.set(10,8.4,stationZ-11.6);scene.add(gasSign);
 // Detailed, original procedural motorhome model.
 const rv=new THREE.Group();scene.add(rv);const body=new THREE.Group();rv.add(body);// Open interior shell: floor, thin walls, roof and detailed exterior trim.
 cube(2.8,.16,6.9,mat(0x947a5e),0,1.16,0,body);
@@ -207,6 +236,7 @@ function solidAt(x,z){
   const dx=x-rv.position.x,dz=z-rv.position.z,c=Math.cos(rv.rotation.y),si=Math.sin(rv.rotation.y);
   if(circleRect(dx*c+dz*si,-dx*si+dz*c,0,0,1.52,3.63))return true;
   for(const cabin of cabins)if(circleRect(x,z,cabin.x,cabin.z,6,5))return true;
+  for(const o of stationSolids)if(circleRect(x,z,o.x,o.z,o.w/2,o.d/2,playerRadius))return true;
   // Campground entrance posts, but not the open road through them.
   for(const postX of [-9,9])if(circleRect(x,z,postX,goalZ,.25,.25))return true;
   for(const t of trees){
@@ -235,6 +265,7 @@ function vehicleBlocked(x,z,yaw){
     const px=x+lx*c+lz*si,pz=z-lx*si+lz*c;
     const r=.48;
     for(const cabin of cabins)if(circleRect(px,pz,cabin.x,cabin.z,6,5,r))return true;
+    for(const o of stationSolids)if(circleRect(px,pz,o.x,o.z,o.w/2,o.d/2,r))return true;
     for(const postX of [-9,9])if(circleRect(px,pz,postX,goalZ,.25,.25,r))return true;
     for(const t of trees){
       if(t.stage==='standing'||t.stage==='falling'){
@@ -477,6 +508,26 @@ addEventListener('pointermove',e=>{
 renderer.domElement.addEventListener('wheel',e=>{
   e.preventDefault();camDistance=THREE.MathUtils.clamp(camDistance+Math.sign(e.deltaY)*1.5,6,28);
 },{passive:false});
+const minimap=document.getElementById('minimap'),mapCtx=minimap.getContext('2d');
+function drawMinimap(){
+  const c=mapCtx,w=220,h=220,scale=.27,originX=110,originY=124;
+  const focus=driving||insideRV?rv.position:player.position;
+  const px=x=>originX+(x-focus.x)*scale,pz=z=>originY+(z-focus.z)*scale;
+  c.clearRect(0,0,w,h);c.fillStyle='#23452f';c.fillRect(0,0,w,h);
+  c.fillStyle='#4b5051';c.fillRect(px(-7),pz(55),14*scale,1750*scale);
+  c.strokeStyle='#e5c978';c.lineWidth=1.3;c.setLineDash([5,5]);c.beginPath();c.moveTo(px(0),pz(60));c.lineTo(px(0),pz(-1700));c.stroke();c.setLineDash([]);
+  c.fillStyle='#326f44';for(const t of trees)if(t.stage==='standing'){const x=px(t.x),y=pz(t.z);if(x>-5&&x<225&&y>-5&&y<225){c.beginPath();c.arc(x,y,1.6,0,Math.PI*2);c.fill()}}
+  c.fillStyle='#ffcc58';c.fillRect(px(stationX-7),pz(stationZ-13),25*scale,22*scale);
+  c.fillStyle='#fff';c.font='bold 11px system-ui';c.fillText('GAS',px(stationX-7),pz(stationZ-14));
+  c.fillStyle='#7de3bb';c.beginPath();c.arc(px(0),pz(goalZ),5,0,Math.PI*2);c.fill();
+  c.fillStyle='#fff';c.font='bold 10px system-ui';c.fillText('CAMP',px(0)+7,pz(goalZ));
+  // RV marker and forward heading.
+  c.save();c.translate(px(rv.position.x),pz(rv.position.z));c.rotate(-rv.rotation.y);
+  c.fillStyle='#f7f7f1';c.beginPath();c.moveTo(0,-8);c.lineTo(5,6);c.lineTo(-5,6);c.closePath();c.fill();c.restore();
+  if(!driving&&!insideRV){c.fillStyle='#57bfff';c.beginPath();c.arc(px(player.position.x),pz(player.position.z),4,0,Math.PI*2);c.fill()}
+  c.fillStyle='#ffffffdc';c.font='bold 12px system-ui';c.fillText('MINIMAP',12,19);
+  c.font='10px system-ui';c.fillText('N ↑',186,19);
+}
 function loop(){
   requestAnimationFrame(loop);
   const dt=Math.min(clock.getDelta(),.05);
@@ -590,6 +641,7 @@ function loop(){
   const nearRV=!driving&&!insideRV&&distance2D(player.position,rv.position)<5.5;
   promptEl.style.display=insideRV||close||nearRV||nearPile||carriedWood?'block':'none';
   promptEl.textContent=insideRV?'H: Exit RV':carriedWood?(distance2D(player.position,rv.position)<6.2?'G: Load wood onto RV roof':'G: Put wood down'):(nearPile?'G: Pick up chopped wood':close?'F / Click: '+(close.stage==='fallen'?'Chop fallen tree':'Chop tree')+' ('+(3-close.hits)+' hits left)':nearRV?'H: Enter RV · E: Drive':'');
+  drawMinimap();
   renderer.render(scene,camera);
 }
 camera.position.set(0,8,17);loop();
