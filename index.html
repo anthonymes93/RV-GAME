@@ -1,4 +1,4 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>RV Road Trip — 3D</title><style>html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#a8cce3;font-family:system-ui,Arial;color:white}#hud{position:absolute;top:20px;left:20px;background:#10252ccc;padding:18px 22px;border:1px solid #ffffff30;border-radius:16px;backdrop-filter:blur(8px);min-width:230px}h2{margin:0 0 8px;font-size:19px}#distance{font-size:27px;font-weight:800}#speed{color:#c2dfeb}#help{position:absolute;bottom:18px;left:50%;transform:translateX(-50%);background:#10252cbb;padding:12px 20px;border-radius:12px;text-align:center;font-size:14px;max-width:calc(100% - 55px)}#prompt{position:absolute;bottom:85px;left:50%;transform:translateX(-50%);background:#10252cdd;border:1px solid #ffffff38;border-radius:12px;padding:10px 17px;font-weight:700;display:none;text-align:center;pointer-events:none}#mode{font-size:12px;color:#b7e3d8;margin:7px 0 0}#wood{font-size:13px;color:#f3d6a5;margin-top:5px}#crosshair{display:none;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none;opacity:.6}#crosshair:after{content:"+";font-size:22px}#win{display:none;position:absolute;inset:0;background:#071b21bd;align-items:center;justify-content:center;flex-direction:column;text-align:center}button{padding:12px 24px;border:0;border-radius:10px;font-weight:700;cursor:pointer}#error{display:none;position:absolute;inset:0;background:#182c35;align-items:center;justify-content:center;text-align:center;padding:30px}</style></head><body><div id="hud"><h2>🚐 Pine Lake Road Trip</h2><div id="distance">1.00 mi remaining</div><div id="speed">0 mph</div><div id="mode">DRIVING</div><div id="wood">Wood loaded: 0</div><div style="font-size:12px;opacity:.8;margin-top:8px">Destination: Pine Lake Campground</div></div><div id="help">W / ↑ Accelerate · S / ↓ Brake & reverse · A D / ← → Steer · E Exit RV · R Reset</div><div id="prompt"></div><div id="crosshair"></div><div id="win"><h1>🏕️ Welcome to Pine Lake!</h1><p>You drove one mile to the campground.</p><button onclick="location.reload()">Drive again</button></div><div id="error">3D engine couldn't load. Connect to the internet and refresh the page.</div><script type="module">
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>RV Road Trip — 3D</title><style>html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#a8cce3;font-family:system-ui,Arial;color:white}#hud{position:absolute;top:20px;left:20px;background:#10252ccc;padding:18px 22px;border:1px solid #ffffff30;border-radius:16px;backdrop-filter:blur(8px);min-width:230px}h2{margin:0 0 8px;font-size:19px}#distance{font-size:27px;font-weight:800}#speed{color:#c2dfeb}#help{position:absolute;bottom:18px;left:50%;transform:translateX(-50%);background:#10252cbb;padding:12px 20px;border-radius:12px;text-align:center;font-size:14px;max-width:calc(100% - 55px)}#prompt{position:absolute;bottom:85px;left:50%;transform:translateX(-50%);background:#10252cdd;border:1px solid #ffffff38;border-radius:12px;padding:10px 17px;font-weight:700;display:none;text-align:center;pointer-events:none}#mode{font-size:12px;color:#b7e3d8;margin:7px 0 0}#wood{font-size:13px;color:#f3d6a5;margin-top:5px}#crosshair{display:none;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none;opacity:.6}#crosshair:after{content:"+";font-size:22px}#win{display:none;position:absolute;inset:0;background:#071b21bd;align-items:center;justify-content:center;flex-direction:column;text-align:center}button{padding:12px 24px;border:0;border-radius:10px;font-weight:700;cursor:pointer}#error{display:none;position:absolute;inset:0;background:#182c35;align-items:center;justify-content:center;text-align:center;padding:30px}</style></head><body><div id="hud"><h2>🚐 Pine Lake Road Trip</h2><div id="distance">1.00 mi remaining</div><div id="speed">0 mph</div><div id="mode">DRIVING</div><div id="wood">Wood loaded: 0</div><div id="saveStatus" style="font-size:11px;opacity:.75;margin-top:5px">Autosave enabled</div><button id="newGame" style="margin-top:9px;padding:5px 10px;font-size:11px">New game / Clear save</button><div style="font-size:12px;opacity:.8;margin-top:8px">Destination: Pine Lake Campground</div></div><div id="help">W / ↑ Accelerate · S / ↓ Brake & reverse · A D / ← → Steer · E Exit RV · R Reset</div><div id="prompt"></div><div id="crosshair"></div><div id="win"><h1>🏕️ Welcome to Pine Lake!</h1><p>You drove one mile to the campground.</p><button onclick="location.reload()">Drive again</button></div><div id="error">3D engine couldn't load. Connect to the internet and refresh the page.</div><script type="module">
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js';
 const scene=new THREE.Scene();scene.background=new THREE.Color(0xa9cce5);scene.fog=new THREE.FogExp2(0xa9cce5,.00043);
 const camera=new THREE.PerspectiveCamera(68,innerWidth/innerHeight,.1,4500);const renderer=new THREE.WebGLRenderer({antialias:true});renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.35;document.body.prepend(renderer.domElement);
@@ -226,7 +226,7 @@ function handleWood(){
       const pile=carriedWood.pile;
       pile.removeFromParent();rv.add(pile);
       pile.scale.setScalar(.55);
-      const slot=roofLoads++;
+      const slot=roofLoads++;carriedWood.roofSlot=slot;
       pile.position.set((slot%2===0?-.63:.63),4.04+Math.floor(slot/8)*.48,-2.2+(Math.floor(slot/2)%4)*1.45);
       pile.rotation.set(0,0,0);
       carriedWood.stage='loaded';carriedWood=null;
@@ -247,6 +247,64 @@ function handleWood(){
   t.pile.scale.setScalar(.55);
 }
 
+// Save all mutable world state locally; survives reloads and browser restarts.
+const SAVE_KEY='rv-game-save-v1';
+const saveStatus=document.getElementById('saveStatus');
+function saveGame(){
+  try{
+    const data={version:1,rv:[rv.position.x,rv.position.z,rv.rotation.y],player:[player.position.x,player.position.z,player.rotation.y],driving,finished,wood,roofLoads,
+      carried:carriedWood?trees.indexOf(carriedWood):-1,
+      trees:trees.map(t=>({stage:t.stage,hits:t.hits,dir:t.dir,fall:t.fall,
+        pile:t.pile&&t.stage==='pile'?[t.pile.position.x,t.pile.position.z]:null,
+        slot:t.roofSlot??null}))};
+    localStorage.setItem(SAVE_KEY,JSON.stringify(data));
+    saveStatus.textContent='Saved locally';
+  }catch(e){saveStatus.textContent='Save unavailable (browser storage blocked)';}
+}
+function restoreGame(){
+  let data;
+  try{data=JSON.parse(localStorage.getItem(SAVE_KEY)||'null')}catch(e){return}
+  if(!data||data.version!==1||!Array.isArray(data.trees)||data.trees.length!==trees.length)return;
+  try{
+    rv.position.set(data.rv[0],0,data.rv[1]);rv.rotation.y=data.rv[2];
+    player.position.set(data.player[0],0,data.player[1]);player.rotation.y=data.player[2];
+    driving=!!data.driving;finished=!!data.finished;wood=data.wood||0;roofLoads=data.roofLoads||0;speed=0;
+    player.visible=!driving;modeEl.textContent=driving?'DRIVING':'ON FOOT';
+    crosshairEl.style.display=driving?'none':'block';
+    helpEl.textContent=driving?'W / ↑ Accelerate · S / ↓ Brake & reverse · A D / ← → Steer · E Exit RV · R Reset':'WASD Walk · Shift Run · F Chop · G Pick up / Load wood · E Enter RV · R Reset';
+    woodEl.textContent='Wood loaded: '+wood;
+    for(let i=0;i<trees.length;i++){
+      const t=trees[i],saved=data.trees[i];if(!saved)continue;
+      t.stage=saved.stage;t.hits=saved.hits||0;t.dir=saved.dir||1;t.fall=saved.fall||0;
+      if(t.stage==='falling') {t.stage='fallen';t.fall=Math.PI/2}
+      if(t.stage==='fallen')t.group.rotation.z=t.dir*Math.PI/2;
+      if(['pile','carried','loaded'].includes(t.stage)){
+        scene.remove(t.group);makeWoodPile(t);
+        if(t.stage==='pile'&&saved.pile)t.pile.position.set(saved.pile[0],t.scale*.23,saved.pile[1]);
+        if(t.stage==='loaded'){
+          const slot=saved.slot??0;t.roofSlot=slot;t.pile.removeFromParent();rv.add(t.pile);
+          t.pile.scale.setScalar(.55);
+          t.pile.position.set(slot%2===0?-.63:.63,4.04+Math.floor(slot/8)*.48,-2.2+(Math.floor(slot/2)%4)*1.45);
+        }
+        if(t.stage==='carried'){
+          t.pile.removeFromParent();player.add(t.pile);
+          t.pile.position.set(0,1.1,-.75);t.pile.scale.setScalar(.55);carriedWood=t;
+        }
+      }
+    }
+    if(finished)document.getElementById('win').style.display='flex';
+    saveStatus.textContent='Previous game restored';
+  }catch(e){saveStatus.textContent='Save could not be restored';}
+}
+document.getElementById('newGame').addEventListener('click',()=>{
+  if(confirm('Delete your saved progress and start a new game?')){
+    localStorage.removeItem(SAVE_KEY);location.reload();
+  }
+});
+restoreGame();
+setInterval(saveGame,3000);
+addEventListener('pagehide',saveGame);
+addEventListener('visibilitychange',()=>{if(document.hidden)saveGame()});
 function toggleVehicle(){
   if(finished)return;
   if(driving){
@@ -303,7 +361,7 @@ addEventListener('keydown',e=>{
   if(k==='e')toggleVehicle();
   if(k==='f')chopTree();
   if(k==='g')handleWood();
-  if(k==='r')location.reload();
+  if(k==='r'){saveGame();location.reload();}
 });
 addEventListener('keyup',e=>keys[e.key.toLowerCase()]=false);
 addEventListener('blur',()=>{for(const k of Object.keys(keys))keys[k]=false});
