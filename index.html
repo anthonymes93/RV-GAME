@@ -11,7 +11,7 @@ const ground=cube(7000,1,7000,grass,0,-.58,-800);ground.castShadow=false;const r
 for(let z=40;z>-1650;z-=22){cube(.2,.025,9,yellow,-.04,.096,z).castShadow=false}for(const x of [-6.55,6.55])cube(.18,.025,1750,white,x,.1,-800).castShadow=false;
 // Seeded random so scenery is stable.
 let seed=4382;function rand(){seed=(seed*1664525+1013904223)>>>0;return seed/4294967296}
-const trees=[];const trunkGeo=new THREE.CylinderGeometry(.45,.62,5,7),coneGeo=new THREE.ConeGeometry(3.4,10,8);function addTree(x,z,s){const t=new THREE.Group();t.position.set(x,0,z);t.scale.setScalar(s);const trunk=new THREE.Mesh(trunkGeo,treeBark);trunk.position.y=2.5;t.add(trunk);for(let j=0;j<3;j++){const c=new THREE.Mesh(coneGeo,j%2?pine2:pine);c.position.y=6+j*2.7;c.scale.set(1-j*.17,.8,1-j*.17);t.add(c)}scene.add(t);trees.push({group:t,x,z,scale:s,hits:0,falling:false,fall:0,dir:1})}
+const trees=[];const trunkGeo=new THREE.CylinderGeometry(.45,.62,5,7),coneGeo=new THREE.ConeGeometry(3.4,10,8);function addTree(x,z,s){const t=new THREE.Group();t.position.set(x,0,z);t.scale.setScalar(s);const trunk=new THREE.Mesh(trunkGeo,treeBark);trunk.position.y=2.5;t.add(trunk);for(let j=0;j<3;j++){const c=new THREE.Mesh(coneGeo,j%2?pine2:pine);c.position.y=6+j*2.7;c.scale.set(1-j*.17,.8,1-j*.17);t.add(c)}scene.add(t);trees.push({group:t,x,z,scale:s,hits:0,stage:"standing",fall:0,dir:1,pile:null})}
 for(let z=65;z>-1700;z-=15){for(const side of [-1,1]){if(rand()>.1)addTree(side*(24+rand()*90),z+(rand()-.5)*20,.65+rand()*1.3);if(rand()>.5)addTree(side*(110+rand()*90),z+(rand()-.5)*30,.9+rand()*1.3)}}
 // Distant hills.
 const hillMat=mat(0x68816c);for(let i=0;i<32;i++){const x=(rand()-.5)*2100,z=-200-rand()*2100;const hill=new THREE.Mesh(new THREE.ConeGeometry(100+rand()*130,140+rand()*160,7),hillMat);hill.position.set(x,40,z);scene.add(hill)}
@@ -46,11 +46,38 @@ function distance2D(a,b){return Math.hypot(a.x-b.x,a.z-b.z)}
 function nearestTree(){
   let best=null,dist=5;
   for(const t of trees){
-    if(t.falling)continue;
-    const d=Math.hypot(player.position.x-t.x,player.position.z-t.z);
+    if(t.stage==='falling'||t.stage==='pile')continue;
+    // A fallen tree can be chopped anywhere along its trunk.
+    let d=Math.hypot(player.position.x-t.x,player.position.z-t.z);
+    if(t.stage==='fallen'){
+      const trunkEnd=t.x+t.dir*5*t.scale;
+      const left=Math.min(t.x,trunkEnd),right=Math.max(t.x,trunkEnd);
+      const closestX=THREE.MathUtils.clamp(player.position.x,left,right);
+      d=Math.hypot(player.position.x-closestX,player.position.z-t.z);
+    }
     if(d<dist){best=t;dist=d}
   }
   return best;
+}
+function makeWoodPile(t){
+  const pile=new THREE.Group();
+  pile.position.set(t.x,t.scale*.23,t.z);
+  // Cut log sections, stacked crosswise, with visible circular end grain.
+  const cutEnds=mat(0xd1a16d),logBark=mat(0x69452f);
+  for(let i=0;i<7;i++){
+    const layer=i<4?0:1;
+    const x=(i<4?i-1.5:i-5)*t.scale*.88;
+    const y=layer*t.scale*.7;
+    const log=new THREE.Mesh(new THREE.CylinderGeometry(t.scale*.32,t.scale*.32,t.scale*2.1,10),[
+      logBark,cutEnds,cutEnds
+    ]);
+    log.rotation.x=Math.PI/2;
+    log.position.set(x,y,0);
+    log.castShadow=true;log.receiveShadow=true;
+    pile.add(log);
+  }
+  scene.add(pile);
+  t.pile=pile;
 }
 function toggleVehicle(){
   if(finished)return;
@@ -79,10 +106,17 @@ function chopTree(){
   if(!t)return;
   t.hits++;
   if(t.hits>=3){
-    t.falling=true;
-    t.dir=(t.x-player.position.x>=0?1:-1);
-    wood+=3;
-    woodEl.textContent='Wood collected: '+wood;
+    t.hits=0;
+    if(t.stage==='standing'){
+      t.stage='falling';
+      t.dir=(t.x-player.position.x>=0?1:-1);
+    }else if(t.stage==='fallen'){
+      t.stage='pile';
+      scene.remove(t.group);
+      makeWoodPile(t);
+      wood+=3;
+      woodEl.textContent='Wood collected: '+wood;
+    }
   }
 }
 addEventListener('keydown',e=>{
@@ -104,12 +138,12 @@ function loop(){
   swingTime=Math.max(0,swingTime-dt);
   axeArm.rotation.x=swingTime>0?-Math.sin((.4-swingTime)/.4*Math.PI)*1.8:THREE.MathUtils.lerp(axeArm.rotation.x,0,dt*10);
   for(const t of trees){
-    if(!t.falling)continue;
+    if(t.stage!=='falling')continue;
     t.fall=Math.min(Math.PI/2,t.fall+dt*1.55);
     t.group.rotation.z=t.dir*t.fall;
     if(t.fall>=Math.PI/2){
-      scene.remove(t.group);
-      t.fall=999;
+      // Keep the full fallen tree rendered until it is chopped again.
+      t.stage='fallen';
     }
   }
   if(!finished){
@@ -171,7 +205,7 @@ function loop(){
   const close=driving?null:nearestTree();
   const nearRV=!driving&&distance2D(player.position,rv.position)<5.5;
   promptEl.style.display=close||nearRV?'block':'none';
-  promptEl.textContent=close?'F / Click: Chop tree ('+(3-close.hits)+' hits left)':nearRV?'E: Enter RV':'';
+  promptEl.textContent=close?'F / Click: '+(close.stage==='fallen'?'Chop fallen tree':'Chop tree')+' ('+(3-close.hits)+' hits left)':nearRV?'E: Enter RV':'';
   renderer.render(scene,camera);
 }
 camera.position.set(0,8,17);loop();
