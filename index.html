@@ -177,9 +177,10 @@ function movePlayer(dx,dz){
   const x=THREE.MathUtils.clamp(player.position.x+dx,-200,200);
   const z=THREE.MathUtils.clamp(player.position.z+dz,-1700,80);
   // Escape is allowed if a pre-existing overlap is being reduced.
-  const before=solidAt(player.position.x,player.position.z);
-  if(!solidAt(x,player.position.z)||before)player.position.x=x;
-  if(!solidAt(player.position.x,z)||before)player.position.z=z;
+  // Never bypass collision checks, even when loading a saved position.
+  // Separate axes permit sliding along the RV without entering its body.
+  if(!solidAt(x,player.position.z))player.position.x=x;
+  if(!solidAt(player.position.x,z))player.position.z=z;
 }
 function nearestTree(){
   let best=null,dist=5;
@@ -269,6 +270,18 @@ function restoreGame(){
     rv.position.set(data.rv[0],0,data.rv[1]);rv.rotation.y=data.rv[2];
     player.position.set(data.player[0],0,data.player[1]);player.rotation.y=data.player[2];
     driving=!!data.driving;finished=!!data.finished;wood=data.wood||0;roofLoads=data.roofLoads||0;speed=0;
+    // Old saves may place the player inside the RV. Move to a clear side.
+    if(!driving&&solidAt(player.position.x,player.position.z)){
+      let clear=false;
+      for(const side of [1,-1]){
+        for(const offset of [3.25,4.3,5.4,6.5,8]){
+          const x=rv.position.x+Math.cos(rv.rotation.y)*offset*side;
+          const z=rv.position.z-Math.sin(rv.rotation.y)*offset*side;
+          if(!solidAt(x,z)){player.position.set(x,0,z);clear=true;break}
+        }
+        if(clear)break;
+      }
+    }
     player.visible=!driving;modeEl.textContent=driving?'DRIVING':'ON FOOT';
     crosshairEl.style.display=driving?'none':'block';
     helpEl.textContent=driving?'W / ↑ Accelerate · S / ↓ Brake & reverse · A D / ← → Steer · E Exit RV · R Reset':'WASD Walk · Shift Run · F Chop · G Pick up / Load wood · E Enter RV · R Reset';
