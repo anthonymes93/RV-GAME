@@ -128,6 +128,48 @@ cube(.8,.35,.65,rvWhite,0,3.91,-1.45,body); // roof air conditioner
 cube(2.7,.35,.2,silver,0,1.18,-3.55,body);cube(2.7,.3,.2,silver,0,1.2,3.53,body);cube(1.2,.2,.15,mat(0xffe9ba),0,2.05,-3.58,body);for(const x of [-1.05,1.05]){cube(.52,.28,.1,mat(0xffe8a5),x,1.8,-3.55,body);cube(.45,.28,.1,mat(0xa93228),x,1.8,3.55,body)}
 const wheels=[];for(const z of [-2.15,2.1])for(const x of [-1.48,1.48]){const wheel=new THREE.Group();wheel.position.set(x,1.02,z);const tire=new THREE.Mesh(new THREE.CylinderGeometry(.73,.73,.33,20),rubber);tire.rotation.z=Math.PI/2;wheel.add(tire);const hub=new THREE.Mesh(new THREE.CylinderGeometry(.37,.37,.35,16),silver);hub.rotation.z=Math.PI/2;wheel.add(hub);body.add(wheel);wheels.push(wheel)}
 
+// An impossible-space convenience store: 11 times the exterior floor area.
+// Kept far from the outdoor world so its much larger room never clips through the facade.
+const store=new THREE.Group();store.position.set(10000,0,10000);scene.add(store);
+const storeW=26,storeD=60;
+const tile=mat(0xbfc5c4),wall=mat(0xe3e4dc),shelf=mat(0x59636a),woodCounter=mat(0x9b7958);
+cube(storeW,.22,storeD,tile,0,.05,0,store);
+cube(storeW,.22,storeD,wall,0,6.4,0,store);
+for(const x of [-storeW/2,storeW/2])cube(.25,6.4,storeD,wall,x,3.2,0,store);
+for(const z of [-storeD/2,storeD/2])cube(storeW,6.4,.25,wall,0,3.2,z,store);
+const storeSolids=[];
+function storeFixture(x,z,w,d){storeSolids.push({x,z,w,d})}
+for(const x of [-7,0,7])for(const z of [-18,-6,6,18]){
+  cube(2.3,2.5,7.5,shelf,x,1.3,z,store);
+  storeFixture(x,z,2.3,7.5);
+  for(const side of [-1,1])for(let level=0;level<3;level++){
+    cube(.28,.42,6.8,mat(level%2?0xc9753c:0x4e9b80),x+side*1.05,.65+level*.74,z,store);
+  }
+}
+cube(8,1.15,2.2,woodCounter,-6, .65,-25,store);storeFixture(-6,-25,8,2.2);
+for(const x of [-10,-6,-2])cube(1.4,1.3,.15,glass,x,1.5,-23.8,store);
+for(const x of [-9,0,9])for(const z of [-23,-10,3,16,26])cube(4,.06,1.2,new THREE.MeshBasicMaterial({color:0xfff7df}),x,6.23,z,store);
+for(const x of [-10,10])for(const z of [25,27]){cube(2.2,3,1.3,mat(0x444e56),x,1.5,z,store);storeFixture(x,z,2.2,1.3)}
+const storeDoorLabel=document.createElement('canvas');storeDoorLabel.width=512;storeDoorLabel.height=128;
+const storeLabelCtx=storeDoorLabel.getContext('2d');storeLabelCtx.fillStyle='#fff';storeLabelCtx.font='bold 64px Arial';storeLabelCtx.textAlign='center';storeLabelCtx.fillText('EXIT  J',256,85);
+const exitSign=new THREE.Mesh(new THREE.PlaneGeometry(5,1.25),new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(storeDoorLabel),transparent:true}));
+exitSign.position.set(0,4,-29.78);store.add(exitSign);
+let insideStore=false;const storePos=new THREE.Vector3(0,0,-26);
+function storeBlocked(x,z){
+  if(Math.abs(x)>storeW/2-.6||Math.abs(z)>storeD/2-.6)return true;
+  return storeSolids.some(o=>Math.abs(x-o.x)<o.w/2+.3&&Math.abs(z-o.z)<o.d/2+.3);
+}
+function toggleStore(){
+  if(driving||insideRV||finished||carriedWood)return;
+  if(!insideStore){
+    if(Math.hypot(player.position.x-(stationX+9),player.position.z-(stationZ-1.3))>9)return;
+    insideStore=true;storePos.set(0,0,-26);player.visible=false;modeEl.textContent='GAS STATION';
+    helpEl.textContent='WASD Walk store · Right-drag Look · J Exit store';
+  }else{
+    insideStore=false;player.visible=true;player.position.set(stationX+9,0,stationZ+2.5);
+    modeEl.textContent='ON FOOT';helpEl.textContent='WASD Walk · J Enter store · H Enter RV · E Drive';
+  }
+}
 // Furnished motorhome interior. Objects share RV-local coordinates so they travel with it.
 const interior=new THREE.Group();rv.add(interior);
 const oak=mat(0x987450),cream=mat(0xdad3c4),fabric=mat(0x677b83),mattress=mat(0xb9c6cb),dark=mat(0x22272b),screenMat=new THREE.MeshBasicMaterial({color:0x17364b}),lightMat=new THREE.MeshBasicMaterial({color:0xfff0c4});
@@ -338,7 +380,7 @@ function makeWoodPile(t){
 }
 function nearbyWood(){let best=null,dist=4.5;for(const t of trees){if(t.stage!=='pile'||!t.pile)continue;const d=distance2D(player.position,t.pile.position);if(d<dist){best=t;dist=d}}return best}
 function handleWood(){
-  if(driving||insideRV||finished)return;
+  if(driving||insideRV||insideStore||finished)return;
   if(carriedWood){
     if(distance2D(player.position,rv.position)<6.2){
       // Load onto the roof, in rows that remain attached while the RV moves.
@@ -371,7 +413,7 @@ const SAVE_KEY='rv-game-save-v1';
 const saveStatus=document.getElementById('saveStatus');
 function saveGame(){
   try{
-    const data={version:1,insideRV,interiorPos:[interiorPos.x,interiorPos.z],rv:[rv.position.x,rv.position.z,rv.rotation.y],player:[player.position.x,player.position.z,player.rotation.y],driving,finished,wood,roofLoads,
+    const data={version:1,insideStore,storePos:[storePos.x,storePos.z],insideRV,interiorPos:[interiorPos.x,interiorPos.z],rv:[rv.position.x,rv.position.z,rv.rotation.y],player:[player.position.x,player.position.z,player.rotation.y],driving,finished,wood,roofLoads,
       carried:carriedWood?trees.indexOf(carriedWood):-1,
       trees:trees.map(t=>({stage:t.stage,hits:t.hits,dir:t.dir,fall:t.fall,
         pile:t.pile&&t.stage==='pile'?[t.pile.position.x,t.pile.position.z]:null,
@@ -387,7 +429,7 @@ function restoreGame(){
   try{
     rv.position.set(data.rv[0],0,data.rv[1]);rv.rotation.y=data.rv[2];
     player.position.set(data.player[0],0,data.player[1]);player.rotation.y=data.player[2];
-    driving=!!data.driving;insideRV=!!data.insideRV&&!driving;if(Array.isArray(data.interiorPos))interiorPos.set(data.interiorPos[0],0,data.interiorPos[1]);roofMesh.visible=!insideRV;finished=!!data.finished;wood=data.wood||0;roofLoads=data.roofLoads||0;speed=0;
+    driving=!!data.driving;insideStore=!!data.insideStore&&!driving;if(Array.isArray(data.storePos))storePos.set(data.storePos[0],0,data.storePos[1]);insideRV=!!data.insideRV&&!driving&&!insideStore;if(Array.isArray(data.interiorPos))interiorPos.set(data.interiorPos[0],0,data.interiorPos[1]);roofMesh.visible=!insideRV;finished=!!data.finished;wood=data.wood||0;roofLoads=data.roofLoads||0;speed=0;
     // Old saves may place the player inside the RV. Move to a clear side.
     if(!driving&&solidAt(player.position.x,player.position.z)){
       let clear=false;
@@ -400,9 +442,9 @@ function restoreGame(){
         if(clear)break;
       }
     }
-    player.visible=!driving&&!insideRV;modeEl.textContent=driving?'DRIVING':insideRV?'INSIDE RV':'ON FOOT';
-    crosshairEl.style.display=driving||insideRV?'none':'block';
-    helpEl.textContent=driving?'WASD Drive · E Exit RV':insideRV?'WASD Walk inside · H Exit RV':'WASD Walk · F Chop · G Wood · H Enter RV · E Drive';
+    player.visible=!driving&&!insideRV&&!insideStore;modeEl.textContent=driving?'DRIVING':insideStore?'GAS STATION':insideRV?'INSIDE RV':'ON FOOT';
+    crosshairEl.style.display=driving||insideRV||insideStore?'none':'block';
+    helpEl.textContent=driving?'WASD Drive · E Exit RV':insideStore?'WASD Walk store · Right-drag Look · J Exit':insideRV?'WASD Walk inside · H Exit RV':'WASD Walk · J Enter store · H Enter RV · E Drive';
     woodEl.textContent='Wood loaded: '+wood;
     for(let i=0;i<trees.length;i++){
       const t=trees[i],saved=data.trees[i];if(!saved)continue;
@@ -437,7 +479,7 @@ setInterval(saveGame,3000);
 addEventListener('pagehide',saveGame);
 addEventListener('visibilitychange',()=>{if(document.hidden)saveGame()});
 function toggleVehicle(){
-  if(finished||insideRV)return;
+  if(finished||insideRV||insideStore)return;
   if(driving){
     driving=false;speed=0;
     player.visible=true;
@@ -466,7 +508,7 @@ function toggleVehicle(){
   }
 }
 function chopTree(){
-  if(driving||insideRV||finished||axeCooldown>0)return;
+  if(driving||insideRV||insideStore||finished||axeCooldown>0)return;
   swingTime=.4;axeCooldown=.48;
   const t=nearestTree();
   if(!t)return;
@@ -487,12 +529,13 @@ function chopTree(){
 addEventListener('keydown',e=>{
   const k=e.key.toLowerCase();
   if(['arrowup','arrowdown','arrowleft','arrowright',' '].includes(k))e.preventDefault();
-  if(e.repeat&&['e','f','g','h','r'].includes(k))return;
+  if(e.repeat&&['e','f','g','h','j','r'].includes(k))return;
   keys[k]=true;
   if(k==='e')toggleVehicle();
   if(k==='f')chopTree();
   if(k==='g')handleWood();
   if(k==='h')enterInterior();
+  if(k==='j')toggleStore();
   if(k==='r'){saveGame();location.reload();}
 });
 addEventListener('keyup',e=>keys[e.key.toLowerCase()]=false);
@@ -581,6 +624,18 @@ function loop(){
       if(rv.position.z<=goalZ+6&&Math.abs(rv.position.x)<11){
         finished=true;speed=0;document.getElementById('win').style.display='flex';
       }
+    }else if(insideStore){
+      const sx=(keys.d||keys.arrowright?1:0)-(keys.a||keys.arrowleft?1:0);
+      const sz=(keys.w||keys.arrowup?1:0)-(keys.s||keys.arrowdown?1:0);
+      const length=Math.hypot(sx,sz);
+      if(length){
+        const steps=Math.max(1,Math.ceil(5*dt/.15));
+        for(let i=0;i<steps;i++){
+          const dx=sx/length*5*dt/steps,dz=-sz/length*5*dt/steps;
+          if(!storeBlocked(storePos.x+dx,storePos.z))storePos.x+=dx;
+          if(!storeBlocked(storePos.x,storePos.z+dz))storePos.z+=dz;
+        }
+      }
     }else if(insideRV){
       const sideways=(keys.d||keys.arrowright?1:0)-(keys.a||keys.arrowleft?1:0);
       const forward=(keys.w||keys.arrowup?1:0)-(keys.s||keys.arrowdown?1:0);
@@ -616,7 +671,10 @@ function loop(){
   }
   const center=driving||insideRV?rv.position:player.position;
   let behind,target;
-  if(insideRV){
+  if(insideStore){
+    behind=new THREE.Vector3(10000+storePos.x,2.7,10000+storePos.z);
+    target=new THREE.Vector3(10000+storePos.x+Math.sin(camYaw)*8,2.3,10000+storePos.z-Math.cos(camYaw)*8);
+  }else if(insideRV){
     behind=rv.localToWorld(new THREE.Vector3(interiorPos.x,3.05,interiorPos.z+1.05));
     target=rv.localToWorld(new THREE.Vector3(interiorPos.x,2.25,interiorPos.z-2));
   }else if(driving){
@@ -629,19 +687,20 @@ function loop(){
     behind=new THREE.Vector3(center.x+Math.sin(angle)*horizontal,center.y+2.3+camDistance*.7*Math.sin(camPitch),center.z+Math.cos(angle)*horizontal);
     target=new THREE.Vector3(center.x,center.y+1.6,center.z);
   }
-  camera.position.lerp(behind,Math.min(1,dt*5));
-  camTarget.lerp(target,Math.min(1,dt*9));
+  camera.position.lerp(behind,insideStore?1:Math.min(1,dt*5));
+  camTarget.lerp(target,insideStore?1:Math.min(1,dt*9));
   camera.lookAt(camTarget);
   sun.position.set(center.x-140,260,center.z+100);
   sun.target.position.copy(center);sun.target.updateMatrixWorld();
   const remaining=Math.max(0,(goalZ-rv.position.z)/goalZ);
   distanceEl.textContent=remaining.toFixed(2)+' mi remaining';
-  speedEl.textContent=driving?Math.round(Math.abs(speed)*2.23694)+' mph':insideRV?'Exploring RV interior':'Exploring on foot';
-  const close=driving||insideRV?null:nearestTree();
-  const nearPile=!driving&&!insideRV&&!carriedWood?nearbyWood():null;
-  const nearRV=!driving&&!insideRV&&distance2D(player.position,rv.position)<5.5;
-  promptEl.style.display=insideRV||close||nearRV||nearPile||carriedWood?'block':'none';
-  promptEl.textContent=insideRV?'H: Exit RV':carriedWood?(distance2D(player.position,rv.position)<6.2?'G: Load wood onto RV roof':'G: Put wood down'):(nearPile?'G: Pick up chopped wood':close?'F / Click: '+(close.stage==='fallen'?'Chop fallen tree':'Chop tree')+' ('+(3-close.hits)+' hits left)':nearRV?'H: Enter RV · E: Drive':'');
+  speedEl.textContent=driving?Math.round(Math.abs(speed)*2.23694)+' mph':insideStore?'Inside gas station':insideRV?'Exploring RV interior':'Exploring on foot';
+  const close=driving||insideRV||insideStore?null:nearestTree();
+  const nearPile=!driving&&!insideRV&&!insideStore&&!carriedWood?nearbyWood():null;
+  const nearRV=!driving&&!insideRV&&!insideStore&&distance2D(player.position,rv.position)<5.5;
+  const nearStore=!driving&&!insideRV&&!insideStore&&Math.hypot(player.position.x-(stationX+9),player.position.z-(stationZ-1.3))<9;
+  promptEl.style.display=insideStore||nearStore||insideRV||close||nearRV||nearPile||carriedWood?'block':'none';
+  promptEl.textContent=insideStore?'J: Exit gas station':nearStore?'J: Enter gas station':insideRV?'H: Exit RV':carriedWood?(distance2D(player.position,rv.position)<6.2?'G: Load wood onto RV roof':'G: Put wood down'):(nearPile?'G: Pick up chopped wood':close?'F / Click: '+(close.stage==='fallen'?'Chop fallen tree':'Chop tree')+' ('+(3-close.hits)+' hits left)':nearRV?'H: Enter RV · E: Drive':'');
   drawMinimap();
   renderer.render(scene,camera);
 }
